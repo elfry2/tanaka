@@ -5,11 +5,11 @@ The script installs:
 - Git
 - GitHub CLI
 - XAMPP 8.2
-- Composer
 - Visual Studio Code
 - NodeJS LTS
 - MongoDB LTS
 - MongoDB Compass
+- Composer
 
 ## Installation
 On PowerShell with administrative privileges, execute (can be pasted at once)
