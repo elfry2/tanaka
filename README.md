@@ -6,7 +6,7 @@ The script installs:
 - GitHub CLI
 - XAMPP 8.2
 - Composer
-- VSCode
+- Visual Studio Code
 - NodeJS LTS
 - MongoDB LTS
 - MongoDB Compass
