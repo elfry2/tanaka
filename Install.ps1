@@ -21,7 +21,7 @@ function Install-Tool {
 
     Write-Host "`nInstalling $Name..." -ForegroundColor Cyan
 
-    $result = winget install --id $Id --silent --accept-package-agreements --accept-source-agreements 2>&1
+    $result = winget install --id $Id --silent --accept-package-agreements --accept-source-agreements --verbose 2>&1
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "$Name installed successfully." -ForegroundColor Green
