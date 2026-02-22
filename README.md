@@ -1,5 +1,5 @@
 # tanaka
-A PowerShell script to effortlessly install common web development tools, to support common workflows, using common techniques. Written with those who prefer to seamlessly collaborate with others in mind. Powered by WinGet.
+A PowerShell script to effortlessly install common web development tools, to support common workflows, using common techniques. Written with those who prefer to easily work with others in mind. Powered by WinGet.
 
 The script installs:
 - Git
