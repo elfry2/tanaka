@@ -43,14 +43,20 @@ function Install-Composer {
         return $false
     }
 
-    Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
-    & $php $installerPath --install-dir="C:\xampp\php" --filename=composer
-    Remove-Item $installerPath -Force
+    Write-Host "Downloading Composer installer from $installerUrl..." -ForegroundColor Cyan
+    Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -Verbose
+
+    Write-Host "Running Composer installer..." -ForegroundColor Cyan
+    & $php $installerPath --install-dir="C:\xampp\php" --filename=composer --verbose
+
+    Write-Host "Cleaning up installer..." -ForegroundColor Cyan
+    Remove-Item $installerPath -Force -Verbose
 
     if ($LASTEXITCODE -eq 0) {
         $phpPath = "C:\xampp\php"
         $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
         if ($currentPath -notlike "*$phpPath*") {
+            Write-Host "Adding $phpPath to system PATH..." -ForegroundColor Cyan
             [Environment]::SetEnvironmentVariable("Path", "$currentPath;$phpPath", "Machine")
             Write-Host "Added $phpPath to system PATH." -ForegroundColor Cyan
         }
