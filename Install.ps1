@@ -3,14 +3,13 @@
 #Requires -RunAsAdministrator
 
 $tools = @(
-    @{ Name = "Git";              Id = "Git.Git"                    },
-    @{ Name = "GitHub CLI";       Id = "GitHub.cli"                 },
-    @{ Name = "XAMPP 8.2";        Id = "ApacheFriends.Xampp.8.2"    },
-    @{ Name = "Composer";         Id = "Composer.Composer"          },
-    @{ Name = "Visual Studio Code"; Id = "Microsoft.VisualStudioCode" },
-    @{ Name = "Node.js LTS";      Id = "OpenJS.NodeJS.LTS"          },
-    @{ Name = "MongoDB LTS";      Id = "MongoDB.Server"             },
-    @{ Name = "MongoDB Compass";  Id = "MongoDB.Compass.Full"       }
+    @{ Name = "Git";                  Id = "Git.Git"                     },
+    @{ Name = "GitHub CLI";           Id = "GitHub.cli"                  },
+    @{ Name = "XAMPP 8.2";            Id = "ApacheFriends.Xampp.8.2"     },
+    @{ Name = "Visual Studio Code";   Id = "Microsoft.VisualStudioCode"  },
+    @{ Name = "Node.js LTS";          Id = "OpenJS.NodeJS.LTS"           },
+    @{ Name = "MongoDB LTS";          Id = "MongoDB.Server"              },
+    @{ Name = "MongoDB Compass";      Id = "MongoDB.Compass.Full"        }
 )
 
 function Install-Tool {
@@ -32,6 +31,37 @@ function Install-Tool {
     }
 }
 
+function Install-Composer {
+    Write-Host "`nInstalling Composer..." -ForegroundColor Cyan
+
+    $php = "C:\xampp\php\php.exe"
+    $installerUrl = "https://getcomposer.org/installer"
+    $installerPath = "$env:TEMP\composer-setup.php"
+
+    if (-not (Test-Path $php)) {
+        Write-Host "PHP not found at $php. Skipping Composer install." -ForegroundColor Red
+        return $false
+    }
+
+    Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
+    & $php $installerPath --install-dir="C:\xampp\php" --filename=composer
+    Remove-Item $installerPath -Force
+
+    if ($LASTEXITCODE -eq 0) {
+        $phpPath = "C:\xampp\php"
+        $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+        if ($currentPath -notlike "*$phpPath*") {
+            [Environment]::SetEnvironmentVariable("Path", "$currentPath;$phpPath", "Machine")
+            Write-Host "Added $phpPath to system PATH." -ForegroundColor Cyan
+        }
+        Write-Host "Composer installed successfully." -ForegroundColor Green
+        return $true
+    } else {
+        Write-Host "Composer installation failed." -ForegroundColor Red
+        return $false
+    }
+}
+
 # ── Header ────────────────────────────────────────────────────────────────────
 
 Clear-Host
@@ -40,6 +70,7 @@ Write-Host "         tanaka — Dev Tool Installer   " -ForegroundColor Magenta
 Write-Host "=======================================" -ForegroundColor Magenta
 Write-Host "The following tools will be installed:"
 $tools | ForEach-Object { Write-Host "  • $($_.Name)" }
+Write-Host "  • Composer"
 Write-Host ""
 
 $confirm = Read-Host "Proceed? (Y/n)"
@@ -66,6 +97,10 @@ foreach ($tool in $tools) {
     }
 }
 
+if (-not (Install-Composer)) {
+    $failed += "Composer"
+}
+
 # ── Summary ───────────────────────────────────────────────────────────────────
 
 Write-Host "`n=======================================" -ForegroundColor Magenta
@@ -77,8 +112,7 @@ if ($failed.Count -eq 0) {
 } else {
     Write-Host "The following tools failed to install:" -ForegroundColor Red
     $failed | ForEach-Object { Write-Host "  • $_" -ForegroundColor Red }
-    Write-Host "`nTry re-running the script, or install them manually via:" -ForegroundColor Yellow
-    Write-Host "  winget install --id <PackageId>" -ForegroundColor Yellow
+    Write-Host "`nTry re-running the script, or install them manually." -ForegroundColor Yellow
 }
 
 Write-Host "`nDone. You may need to restart your terminal or PC for PATH changes to take effect." -ForegroundColor Cyan
