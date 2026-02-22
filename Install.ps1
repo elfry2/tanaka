@@ -21,16 +21,14 @@ function Install-Tool {
 
     Write-Host "`nInstalling $Name..." -ForegroundColor Cyan
 
-    $result = winget install --id $Id --silent --accept-package-agreements --accept-source-agreements --verbose 2>&1
+    winget install --id $Id --silent --accept-package-agreements --accept-source-agreements --verbose
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "$Name installed successfully." -ForegroundColor Green
     } elseif ($LASTEXITCODE -eq -1978335189) {
-        # 0x8A150077 — already installed
         Write-Host "$Name is already installed. Skipping." -ForegroundColor Yellow
     } else {
         Write-Host "Failed to install $Name (exit code: $LASTEXITCODE)." -ForegroundColor Red
-        Write-Host $result
     }
 }
 
