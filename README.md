@@ -7,6 +7,8 @@ The script installs:
 - Git
 - GitHub CLI
 - XAMPP 8.2
+- PostgreSQL 18
+- DBeaver
 - Visual Studio Code
 - NodeJS LTS
 - MongoDB LTS
