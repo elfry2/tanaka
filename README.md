@@ -1,6 +1,8 @@
 # tanaka
 A PowerShell script to effortlessly install common web development tools, to support common workflows, using common techniques. Written with those who prefer to easily work with others in mind. Powered by WinGet.
 
+Code written by Gemini Pro. The conversation can be found on [https://gemini.google.com/share/92662e71bea4](https://gemini.google.com/share/92662e71bea4).
+
 The script installs:
 - Git
 - GitHub CLI
@@ -12,9 +14,7 @@ The script installs:
 - Composer
 
 ## Installation
-Works on PowerShell 5.1+ on Windows with negligible error messages, but you might want [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.6).
-
-On PowerShell with administrative privileges on Windows, execute (can be pasted at once)
+On PowerShell 5.1+ with administrative privileges on Windows, execute (can be pasted at once)
 ```powershell
 git clone https://github.com/elfry2/tanaka
 cd tanaka
