@@ -1,124 +1,71 @@
-# Written by Claude (https://claude.ai/share/b8ea580d-934a-42c8-acdb-e029856c1016).
-
 #Requires -RunAsAdministrator
 
-$tools = @(
-    @{ Name = "Git";                  Id = "Git.Git"                     },
-    @{ Name = "GitHub CLI";           Id = "GitHub.cli"                  },
-    @{ Name = "XAMPP 8.2";            Id = "ApacheFriends.Xampp.8.2"     },
-    @{ Name = "Visual Studio Code";   Id = "Microsoft.VisualStudioCode"  },
-    @{ Name = "Node.js LTS";          Id = "OpenJS.NodeJS.LTS"           },
-    @{ Name = "MongoDB LTS";          Id = "MongoDB.Server"              },
-    @{ Name = "MongoDB Compass";      Id = "MongoDB.Compass.Full"        }
-)
+<#
+.SYNOPSIS
+    Automates the installation of specific developer tools for Windows.
+.DESCRIPTION
+    Uses Winget to install Git, GitHub CLI, XAMPP 8.2, VS Code, NodeJS LTS, 
+    MongoDB Server, and MongoDB Compass. Downloads and installs PHP Composer 
+    via its official setup executable.
+#>
 
-function Install-Tool {
-    param (
-        [string]$Name,
-        [string]$Id
-    )
+Write-Host "Starting automated installation of developer tools..." -ForegroundColor Cyan
 
-    Write-Host "`nInstalling $Name..." -ForegroundColor Cyan
+# Define tools and their exact Winget IDs in an ordered dictionary
+$wingetTools = [ordered]@{
+    "Git"                = "Git.Git"
+    "GitHub CLI"         = "GitHub.cli"
+    "XAMPP 8.2"          = "ApacheFriends.Xampp.8.2"
+    "Visual Studio Code" = "Microsoft.VisualStudioCode"
+    "NodeJS LTS"         = "OpenJS.NodeJS.LTS"
+    "MongoDB LTS"        = "MongoDB.Server"
+    "MongoDB Compass"    = "MongoDB.Compass.Full"
+}
 
-    winget install --id $Id --silent --accept-package-agreements --accept-source-agreements --verbose
-
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "$Name installed successfully." -ForegroundColor Green
-    } elseif ($LASTEXITCODE -eq -1978335189) {
-        Write-Host "$Name is already installed. Skipping." -ForegroundColor Yellow
+# 1. Install tools via Winget
+foreach ($tool in $wingetTools.GetEnumerator()) {
+    Write-Host "`nInstalling $($tool.Name) via Winget..." -ForegroundColor Yellow
+    
+    # --exact ensures it matches the exact ID
+    # --silent hides the installer GUI where possible
+    # --accept-agreements bypasses interactive prompts
+    $arguments = "install --id ""$($tool.Value)"" --exact --silent --accept-package-agreements --accept-source-agreements"
+    
+    $process = Start-Process -FilePath "winget" -ArgumentList $arguments -Wait -NoNewWindow -PassThru
+    
+    # Note: Winget may return non-zero exit codes if a package is already installed or requires a reboot.
+    if ($process.ExitCode -eq 0) {
+        Write-Host "$($tool.Name) installed successfully." -ForegroundColor Green
     } else {
-        Write-Host "Failed to install $Name (exit code: $LASTEXITCODE)." -ForegroundColor Red
+        Write-Host "Winget finished $($tool.Name) with exit code $($process.ExitCode)." -ForegroundColor DarkGray
     }
 }
 
-function Install-Composer {
-    Write-Host "`nInstalling Composer..." -ForegroundColor Cyan
+# 2. Install Composer (Fallback to official installer)
+Write-Host "`nInstalling Composer..." -ForegroundColor Yellow
+$composerUrl = "https://getcomposer.org/Composer-Setup.exe"
+$composerPath = "$env:TEMP\Composer-Setup.exe"
 
-    $php = "C:\xampp\php\php.exe"
-    $installerUrl = "https://getcomposer.org/installer"
-    $installerPath = "$env:TEMP\composer-setup.php"
-
-    if (-not (Test-Path $php)) {
-        Write-Host "PHP not found at $php. Skipping Composer install." -ForegroundColor Red
-        return $false
-    }
-
-    Write-Host "Downloading Composer installer from $installerUrl..." -ForegroundColor Cyan
-    Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -Verbose
-
-    Write-Host "Running Composer installer..." -ForegroundColor Cyan
-    & $php $installerPath --install-dir="C:\xampp\php" --filename=composer --verbose
-
-    Write-Host "Cleaning up installer..." -ForegroundColor Cyan
-    Remove-Item $installerPath -Force -Verbose
-
-    if ($LASTEXITCODE -eq 0) {
-        $phpPath = "C:\xampp\php"
-        $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-        if ($currentPath -notlike "*$phpPath*") {
-            Write-Host "Adding $phpPath to system PATH..." -ForegroundColor Cyan
-            [Environment]::SetEnvironmentVariable("Path", "$currentPath;$phpPath", "Machine")
-            Write-Host "Added $phpPath to system PATH." -ForegroundColor Cyan
-        }
+try {
+    # UseBasicParsing is required in PS 5.1 if IE engine is not initialized
+    Invoke-WebRequest -Uri $composerUrl -OutFile $composerPath -UseBasicParsing
+    
+    # Run the Composer installer silently for all users
+    $composerArgs = "/VERYSILENT /ALLUSERS"
+    $process = Start-Process -FilePath $composerPath -ArgumentList $composerArgs -Wait -NoNewWindow -PassThru
+    
+    if ($process.ExitCode -eq 0) {
         Write-Host "Composer installed successfully." -ForegroundColor Green
-        return $true
     } else {
-        Write-Host "Composer installation failed." -ForegroundColor Red
-        return $false
+        Write-Host "Composer installer exited with code $($process.ExitCode)." -ForegroundColor Red
+    }
+} catch {
+    Write-Host "Failed to download or install Composer: $_" -ForegroundColor Red
+} finally {
+    # Clean up the installer file
+    if (Test-Path $composerPath) {
+        Remove-Item -Path $composerPath -Force
     }
 }
 
-# ── Header ────────────────────────────────────────────────────────────────────
-
-Clear-Host
-Write-Host "=======================================" -ForegroundColor Magenta
-Write-Host "         tanaka — Dev Tool Installer   " -ForegroundColor Magenta
-Write-Host "=======================================" -ForegroundColor Magenta
-Write-Host "The following tools will be installed:"
-$tools | ForEach-Object { Write-Host "  • $($_.Name)" }
-Write-Host "  • Composer"
-Write-Host ""
-
-$confirm = Read-Host "Proceed? (Y/n)"
-if ($confirm -notin @("", "Y", "y")) {
-    Write-Host "Aborted." -ForegroundColor Red
-    exit 0
-}
-
-# ── Preflight: check WinGet ───────────────────────────────────────────────────
-
-if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    Write-Host "`nWinGet is not available. Please install App Installer from the Microsoft Store and try again." -ForegroundColor Red
-    exit 1
-}
-
-# ── Install ───────────────────────────────────────────────────────────────────
-
-$failed = @()
-
-foreach ($tool in $tools) {
-    Install-Tool -Name $tool.Name -Id $tool.Id
-    if ($LASTEXITCODE -notin @(0, -1978335189)) {
-        $failed += $tool.Name
-    }
-}
-
-if (-not (Install-Composer)) {
-    $failed += "Composer"
-}
-
-# ── Summary ───────────────────────────────────────────────────────────────────
-
-Write-Host "`n=======================================" -ForegroundColor Magenta
-Write-Host "              Summary                  " -ForegroundColor Magenta
-Write-Host "=======================================" -ForegroundColor Magenta
-
-if ($failed.Count -eq 0) {
-    Write-Host "All tools installed successfully." -ForegroundColor Green
-} else {
-    Write-Host "The following tools failed to install:" -ForegroundColor Red
-    $failed | ForEach-Object { Write-Host "  • $_" -ForegroundColor Red }
-    Write-Host "`nTry re-running the script, or install them manually." -ForegroundColor Yellow
-}
-
-Write-Host "`nDone. You may need to restart your terminal or PC for PATH changes to take effect." -ForegroundColor Cyan
+Write-Host "`nDeployment tasks finished! Please restart your terminal to ensure all new environment variables (like PATH) are loaded correctly." -ForegroundColor Cyan
