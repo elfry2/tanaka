@@ -13,6 +13,7 @@ The script installs:
 
 ## Installation
 Works on PowerShell 5.* on Windows, but you might want [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.6).
+
 On PowerShell with administrative privileges on Windows, execute (can be pasted at once)
 ```powershell
 git clone https://github.com/elfry2/tanaka
