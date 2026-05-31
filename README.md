@@ -17,6 +17,5 @@ On PowerShell with administrative privileges, execute (can be pasted at once)
 git clone https://github.com/elfry2/tanaka
 cd tanaka
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
 ./Install.ps1
 ```
