@@ -1,7 +1,7 @@
 # tanaka
 A PowerShell script to effortlessly install common web development tools, to support common workflows, using common techniques. Written with those who prefer to easily work with others in mind. Powered by WinGet.
 
-Code written by Gemini 3.1 Pro Extended. The conversation can be found on [https://share.gemini.google/9bbJIY79YHwY](https://share.gemini.google/9bbJIY79YHwY).
+Code written by Gemini 3.1 Pro Extended. The conversation can be found on [https://share.gemini.google/WFLUyffpwq1S](https://share.gemini.google/WFLUyffpwq1S).
 
 The script installs:
 - Git
