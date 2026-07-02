@@ -96,7 +96,7 @@ if ($selectedTools.Count -eq 0) {
 
 # --- 3. Execution Engine ---
 Write-Host "`nProcessing requested adjustments..." -ForegroundColor Cyan
-$installDir = "C::\ProgramData\Composer" # Global custom track location
+$installDir = "C:\ProgramData\Composer" # Global custom track location
 
 foreach ($tool in $selectedTools) {
     if (-not $isUninstall) {
