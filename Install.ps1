@@ -2,29 +2,30 @@
 
 <#
 .SYNOPSIS
-A minimal CLI tool to install standard development environments on Windows via Winget.
+A minimal CLI tool to install standard development environments on Windows.
+Handles Winget packages and custom direct-download installations.
 #>
 
-# Define the tools and their exact Winget IDs
+# Define the tools. Notice the 'Type' property to separate Winget from custom installers.
 $tools = @(
-    [PSCustomObject]@{ Name = "Git"; Id = "Git.Git"; Selected = $true }
-    [PSCustomObject]@{ Name = "GitHub CLI"; Id = "GitHub.cli"; Selected = $true }
-    [PSCustomObject]@{ Name = "XAMPP 8.2"; Id = "ApacheFriends.XAMPP.8.2"; Selected = $true }
-    [PSCustomObject]@{ Name = "Composer"; Id = "getcomposer.Composer"; Selected = $true }
-    [PSCustomObject]@{ Name = "Visual Studio Code"; Id = "Microsoft.VisualStudioCode"; Selected = $true }
-    [PSCustomObject]@{ Name = "NodeJS LTS"; Id = "OpenJS.NodeJS.LTS"; Selected = $true }
-    [PSCustomObject]@{ Name = "MongoDB LTS"; Id = "MongoDB.Server"; Selected = $true }
-    [PSCustomObject]@{ Name = "MongoDB Compass"; Id = "MongoDB.Compass.Community"; Selected = $true }
-    [PSCustomObject]@{ Name = "PostgreSQL 18"; Id = "PostgreSQL.PostgreSQL.18"; Selected = $false }
-    [PSCustomObject]@{ Name = "DBeaver"; Id = "DBeaver.DBeaver.Community"; Selected = $false }
-    [PSCustomObject]@{ Name = "Neovim"; Id = "Neovim.Neovim"; Selected = $false }
+    [PSCustomObject]@{ Name = "Git"; Id = "Git.Git"; Type = "Winget"; Selected = $true }
+    [PSCustomObject]@{ Name = "GitHub CLI"; Id = "GitHub.cli"; Type = "Winget"; Selected = $true }
+    [PSCustomObject]@{ Name = "XAMPP 8.2"; Id = "ApacheFriends.Xampp.8.2"; Type = "Winget"; Selected = $true }
+    [PSCustomObject]@{ Name = "NodeJS LTS"; Id = "OpenJS.NodeJS.LTS"; Type = "Winget"; Selected = $true }
+    [PSCustomObject]@{ Name = "Visual Studio Code"; Id = "Microsoft.VisualStudioCode"; Type = "Winget"; Selected = $true }
+    [PSCustomObject]@{ Name = "MongoDB Server"; Id = "MongoDB.Server"; Type = "Winget"; Selected = $true }
+    [PSCustomObject]@{ Name = "MongoDB Compass"; Id = "MongoDB.Compass.Community"; Type = "Winget"; Selected = $true }
+    [PSCustomObject]@{ Name = "Composer"; Id = "Custom-Composer"; Type = "Custom"; Selected = $true }
+    [PSCustomObject]@{ Name = "PostgreSQL 18"; Id = "PostgreSQL.PostgreSQL.18"; Type = "Winget"; Selected = $false }
+    [PSCustomObject]@{ Name = "DBeaver"; Id = "DBeaver.DBeaver.Community"; Type = "Winget"; Selected = $false }
+    [PSCustomObject]@{ Name = "Neovim"; Id = "Neovim.Neovim"; Type = "Winget"; Selected = $false }
 )
 
 function Show-Menu {
     Clear-Host
     Write-Host "tanaka - Common Web Development Tools Installer" -ForegroundColor Cyan
     Write-Host "========================="
-    Write-Host "Type the numbers separated by commas (e.g., 1,3,5) to toggle your selections."
+    Write-Host "Type the numbers separated by commas (e.g., 8,9,10) to toggle your selections."
     Write-Host "Leave blank and press ENTER to proceed with the installation."
     Write-Host ""
     
@@ -72,21 +73,44 @@ Write-Host "Please note: Some installers may still require manual interaction de
 
 # Execution Loop
 foreach ($tool in $selectedTools) {
-    Write-Host "Installing $($tool.Name) ($($tool.Id))..." -ForegroundColor Yellow
+    Write-Host "Installing $($tool.Name)..." -ForegroundColor Yellow
     
-    # Using Start-Process to accurately capture the exit code from winget
-    $args = @("install", "--id", $tool.Id, "--exact", "--accept-package-agreements", "--accept-source-agreements", "--silent")
-    
-    try {
-        $process = Start-Process -FilePath "winget" -ArgumentList $args -Wait -NoNewWindow -PassThru
-        
-        if ($process.ExitCode -eq 0) {
-            Write-Host "Successfully installed $($tool.Name)`n" -ForegroundColor Green
-        } else {
-            Write-Host "Installation for $($tool.Name) completed with non-zero exit code: $($process.ExitCode).`n" -ForegroundColor DarkYellow
+    if ($tool.Type -eq "Winget") {
+        # Standard Winget Execution
+        $args = @("install", "--id", $tool.Id, "--exact", "--accept-package-agreements", "--accept-source-agreements", "--silent")
+        try {
+            $process = Start-Process -FilePath "winget" -ArgumentList $args -Wait -NoNewWindow -PassThru
+            
+            if ($process.ExitCode -eq 0) {
+                Write-Host "Successfully installed $($tool.Name)`n" -ForegroundColor Green
+            } else {
+                Write-Host "Installation for $($tool.Name) completed with non-zero exit code: $($process.ExitCode).`n" -ForegroundColor DarkYellow
+            }
+        } catch {
+            Write-Host "Failed to execute Winget for $($tool.Name). Ensure Winget is installed.`n" -ForegroundColor Red
         }
-    } catch {
-        Write-Host "Failed to execute Winget for $($tool.Name). Ensure Winget is installed and added to your PATH.`n" -ForegroundColor Red
+    } 
+    elseif ($tool.Name -eq "Composer") {
+        # Custom Execution for Composer
+        try {
+            $composerUrl = "https://getcomposer.org/Composer-Setup.exe"
+            $destPath = "$env:TEMP\Composer-Setup.exe"
+            
+            Write-Host "Downloading latest Composer installer..." -ForegroundColor DarkGray
+            Invoke-WebRequest -Uri $composerUrl -OutFile $destPath -UseBasicParsing
+            
+            $compArgs = @("/VERYSILENT", "/ALLUSERS")
+            $process = Start-Process -FilePath $destPath -ArgumentList $compArgs -Wait -NoNewWindow -PassThru
+            
+            if ($process.ExitCode -eq 0) {
+                Write-Host "Successfully installed Composer`n" -ForegroundColor Green
+            } else {
+                Write-Host "Installation for Composer completed with exit code: $($process.ExitCode).`n(Note: Composer requires PHP to be in your System PATH to install silently)`n" -ForegroundColor DarkYellow
+            }
+            Remove-Item $destPath -Force -ErrorAction SilentlyContinue
+        } catch {
+            Write-Host "Failed to download or install Composer.`n" -ForegroundColor Red
+        }
     }
 }
 
