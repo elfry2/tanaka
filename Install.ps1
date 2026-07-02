@@ -16,7 +16,7 @@ $tools = @(
 
 while ($true) {
     Clear-Host
-    Write-Host "tanaka - Common Web Development Tools Installer`n=======================" -ForegroundColor Cyan
+    Write-Host "tanaka - Common Web Development Tools Installer`n===============================================" -ForegroundColor Cyan
     Write-Host "Type numbers separated by commas to toggle. Press ENTER to install.`n"
     
     for ($i = 0; $i -lt $tools.Count; $i++) {
@@ -49,4 +49,4 @@ foreach ($tool in ($tools | Where-Object { $_.Selected })) {
         if ($path -notlike "*$dir*") { [Environment]::SetEnvironmentVariable("Path", "$path;$dir", "Machine") }
     }
 }
-Write-Host "`nDone!" -ForegroundColor Cyan
+Write-Host "`nDone! You'll need to restart the PC." -ForegroundColor Cyan

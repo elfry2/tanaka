@@ -16,7 +16,7 @@ $tools = @(
 
 while ($true) {
     Clear-Host
-    Write-Host "tanaka - Common Web Development Tools Uninstaller`n=========================" -ForegroundColor Cyan
+    Write-Host "tanaka - Common Web Development Tools Uninstaller`n=================================================" -ForegroundColor Cyan
     Write-Host "Type numbers separated by commas to toggle. Press ENTER to uninstall.`n"
     
     for ($i = 0; $i -lt $tools.Count; $i++) {
@@ -37,7 +37,7 @@ while ($true) {
 }
 
 foreach ($tool in ($tools | Where-Object { $_.Selected })) {
-    Write-Host "`nUninstalling $($tool.Name)..." -ForegroundColor Orange
+    Write-Host "`nUninstalling $($tool.Name)..." -ForegroundColor DarkYellow
     if ($tool.Type -eq "Winget") {
         Start-Process "winget" -ArgumentList "uninstall --id $($tool.Id) --exact --silent" -Wait -NoNewWindow
     } else {
@@ -48,4 +48,4 @@ foreach ($tool in ($tools | Where-Object { $_.Selected })) {
         [Environment]::SetEnvironmentVariable("Path", $cleanedPath, "Machine")
     }
 }
-Write-Host "`nDone!" -ForegroundColor Cyan
+Write-Host "`nDone! You'll need to restart the PC." -ForegroundColor Cyan
